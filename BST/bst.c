@@ -128,7 +128,7 @@ arvore remover (int valor, arvore raiz) {
 	if(raiz == NULL) 
 		return NULL;
 	
-	if(raiz->dado->indice == valor) {		
+	if(raiz->dado->chave == valor) {		
 		if(raiz->esq == NULL) {
 			return raiz->dir;
 		}
@@ -136,10 +136,10 @@ arvore remover (int valor, arvore raiz) {
 			return raiz->esq;
 		}
 		raiz->dado = maior_elemento(raiz->esq);
-		raiz->esq = remover(raiz->dado->indice, raiz->esq);
+		raiz->esq = remover(raiz->dado->chave, raiz->esq);
 		return raiz;
 	}	
-	if(valor > raiz->dado->indice) {
+	if(valor > raiz->dado->chave) {
 			raiz->dir = remover(valor, raiz->dir);
 	} else {
 			raiz->esq = remover(valor, raiz->esq);
@@ -207,11 +207,11 @@ arvore carregar_arquivo(char *nome, arvore a) {
 	return a;
 }
 
-void imprimirElementoPorIndice(arvore raiz, tabela *tab, int indiceBuscado) {
+void imprimirElementoPorChave(arvore raiz, tabela *tab, int chaveBuscado) {
     dado *temp = (dado *)malloc(sizeof(dado));
     temp->numero = 1000;
 
-    arvore elemento = buscarElementoPorIndice(raiz, indiceBuscado);
+    arvore elemento = buscarElementoPorChave(raiz, chaveBuscado);
 
     if (elemento != NULL) {
         printf("indice: %d\n", elemento->dado->indice);
@@ -222,23 +222,23 @@ void imprimirElementoPorIndice(arvore raiz, tabela *tab, int indiceBuscado) {
 
         printf("[%d, %d, %s, %s, %s, %d ]\n", elemento->dado->chave, r, temp->nome, temp->posicao, temp->nacionalidade, temp->idade);
     } else {
-        printf("Elemento com índice %d não encontrado.\n", indiceBuscado);
+        printf("Elemento com chave %d nao encontrado.\n", chaveBuscado);
     }
 
     free(temp);
 }
 
-arvore buscarElementoPorIndice(arvore raiz, int indice) {
+arvore buscarElementoPorChave(arvore raiz, int chave) {
     if (raiz == NULL) {
         return NULL;
     }
 
-    if (indice == raiz->dado->indice) {
+    if (chave == raiz->dado->chave) {
         return raiz;
     }
-    if (indice < raiz->dado->indice) {
-        return buscarElementoPorIndice(raiz->esq, indice);
+    if (chave < raiz->dado->chave) {
+        return buscarElementoPorChave(raiz->esq, chave);
     } else {
-        return buscarElementoPorIndice(raiz->dir, indice);
+        return buscarElementoPorChave(raiz->dir, chave);
     }
 }

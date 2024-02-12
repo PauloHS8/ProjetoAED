@@ -44,9 +44,9 @@ int main(int argc, char *argv[]) {
                 break;
 
              case 9:
-                printf("Digite o indice a ser buscado: ");
+                printf("Digite o numero a ser buscado: ");
                 scanf("%d", &n);
-                imprimirElementoPorIndice(tab.indices, &tab, n);
+                imprimirElementoPorChave(tab.indices, &tab, n);
                 printf("\n");
                 break;
                 

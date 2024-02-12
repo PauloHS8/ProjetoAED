@@ -50,8 +50,8 @@ void tirar_enter(char *string);
 void salvar_arquivo(char *nome, arvore a);
 void salvar_auxiliar(arvore raiz, FILE *arq);
 arvore carregar_arquivo(char *nome, arvore a);
-void imprimirElementoPorIndice(arvore raiz, tabela *tab, int indiceBuscado);
-arvore buscarElementoPorIndice(arvore raiz, int indice);
+void imprimirElementoPorChave(arvore raiz, tabela *tab, int chaveBuscado);
+arvore buscarElementoPorChave(arvore raiz, int chave);
 
 
 
