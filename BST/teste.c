@@ -49,13 +49,7 @@ int main(int argc, char *argv[]) {
                 imprimirElementoPorIndice(tab.indices, &tab, n);
                 printf("\n");
                 break;
-
-            case 10:
-                salvar_arquivo("dados.dat", tab.indices);
-                break;
-            case 11:
-                tab.indices = carregar_arquivo("dados.dat", tab.indices);
-                break;
+                
             case 99:
                 finalizar(&tab);
                 exit(0);
