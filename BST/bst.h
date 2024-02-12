@@ -29,7 +29,7 @@ typedef struct tabela {
 
 int inicializarTabela(tabela *tab);
 void finalizar (tabela *tab);
-void adicionarLivro(tabela *tab, dado *livro);
+void adicionarJogador(tabela *tab, dado *livro);
 	
 
 void inicializar(arvore *raiz);

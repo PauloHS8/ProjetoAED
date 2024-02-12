@@ -23,7 +23,7 @@ void finalizar (tabela *tab) {
 	salvar_arquivo("indices.dat", tab->indices);
 }
 
-void adicionarLivro(tabela *tab, dado *jogadores){
+void adicionarJogador(tabela *tab, dado *jogadores){
 	if(tab->arquivo_dados != NULL) {
 			tipo_dado * novo = (tipo_dado *) malloc(sizeof(tipo_dado));
 
@@ -210,7 +210,7 @@ arvore carregar_arquivo(char *nome, arvore a) {
 void imprimirElementoPorIndice(arvore raiz, tabela *tab, int indiceBuscado) {
     dado *temp = (dado *)malloc(sizeof(dado));
     temp->numero = 1000;
-	
+
     arvore elemento = buscarElementoPorIndice(raiz, indiceBuscado);
 
     if (elemento != NULL) {

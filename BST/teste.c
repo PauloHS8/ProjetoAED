@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
                 printf("%d\n", altura(tab.indices));
                 break;
             case 2:
-                adicionarLivro(&tab, ler_dados());
+                adicionarJogador(&tab, ler_dados());
                 break;
             case 3:
                 printf("%d\n", maior_elemento(tab.indices)->chave);
