@@ -9,9 +9,11 @@ void inicializar(arvore *raiz) {
 }
 
 int inicializarTabela(tabela *tab) {
-	inicializar(&tab->indices);	
+	inicializar(&tab->indices);
+	inicializarRb(&tab->indicerb);
 	tab->arquivo_dados = fopen("dados.dat", "a+b");
 	tab->indices = carregar_arquivo("indices.dat", tab->indices);
+	tab->indicerb = carregar_arquivoRb("indiceRb.dat", tab->indicerb);
 	if(tab->arquivo_dados != NULL)
 		return 1;
 	else
@@ -21,19 +23,24 @@ int inicializarTabela(tabela *tab) {
 void finalizar (tabela *tab) {
 	fclose(tab->arquivo_dados);
 	salvar_arquivo("indices.dat", tab->indices);
+	salvar_arquivoRb("indiceRb.dat", tab->indicerb);
 }
 
 void adicionarJogador(tabela *tab, dado *jogadores){
 	if(tab->arquivo_dados != NULL) {
 			tipo_dado * novo = (tipo_dado *) malloc(sizeof(tipo_dado));
+			tipo_dadorb * novorb = (tipo_dadorb *) malloc(sizeof(tipo_dadorb));
 
 			novo->chave = jogadores->numero;
+			strcpy(novorb->chave, jogadores->nome);
 
 			fseek(tab->arquivo_dados, 0L, SEEK_END);
 			novo->indice = ftell(tab->arquivo_dados);
+			novorb->indice = ftell(tab->arquivo_dados);
 
 			fwrite(jogadores, sizeof(dado), 1, tab->arquivo_dados);
 			tab->indices = adicionar(novo, tab->indices);
+			adicionarRb(novorb, &tab->indicerb);
 	}
 }
 
@@ -241,4 +248,23 @@ arvore buscarElementoPorChave(arvore raiz, int chave) {
     } else {
         return buscarElementoPorChave(raiz->dir, chave);
     }
+}
+
+int remover_jogador(tabela * tab, int numero) {
+	dado *jogador = (dado *)malloc(sizeof(dado));
+
+    arvore temp = buscarElementoPorChave(tab->indices, numero);
+
+    if(temp != NULL) {
+
+        fseek(tab->arquivo_dados, temp->dado->indice, SEEK_SET);
+
+        int r = fread(jogador, sizeof(dado), 1, tab->arquivo_dados);
+        tab->indices = remover(jogador->numero, tab->indices);
+        removerRb(jogador->nome, &tab->indicerb);
+
+        return 1;
+    }
+    else
+        return 0;
 }

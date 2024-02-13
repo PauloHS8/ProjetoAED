@@ -6,6 +6,7 @@ int main(int argc, char *argv[]) {
     tabela tab;
     int opcao;
 	int n;
+    char p[25];
     inicializarTabela(&tab);
 
     while (1) {
@@ -37,19 +38,38 @@ int main(int argc, char *argv[]) {
                 printf("\n");
                 break;
             case 8:
-                printf("Digite o valor a ser removido: ");
+                printf("Digite o numero do jogador a ser removido: ");
                 scanf("%d", &n);
-                tab.indices = remover(n, tab.indices);
+                int result = remover_jogador(&tab, n);
+                if (result){
+                    printf("Removido!");
+                }
+                else{
+                    printf("Nao encontrado!");
+                }
                 printf("\n");
                 break;
 
              case 9:
-                printf("Digite o numero a ser buscado: ");
+                printf("Digite o numero do jogador a ser buscado: ");
                 scanf("%d", &n);
                 imprimirElementoPorChave(tab.indices, &tab, n);
                 printf("\n");
                 break;
-                
+
+             case 10:
+                pre_orderRb(tab.indicerb, &tab);
+                printf("\n");
+                break;
+            case 11:
+                in_orderRb(tab.indicerb, &tab);
+                printf("\n");
+                break;
+            case 12:
+                pos_orderRb(tab.indicerb, &tab);
+                printf("\n");
+                break;
+
             case 99:
                 finalizar(&tab);
                 exit(0);

@@ -1,94 +1,97 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "rb.h"
+#include "bst.h"
+#include <string.h>
 
-arvore no_null;
+arvorerb no_null;
 
-
-void inicializar(arvore *raiz) {
+void inicializarRb(arvorerb *raiz) {
 	*raiz = NULL;
-	no_null = (arvore) malloc(sizeof(struct no_bst));
+	no_null = (arvorerb) malloc(sizeof(struct no_rb));
 	no_null->cor = DUPLO_PRETO;
-	no_null->dado = 0;
+	no_null->dado = NULL;
     no_null->esq = NULL;
     no_null->dir = NULL;
     no_null->pai = NULL;
 }
 
-int inicializarTabela(tabela *tab) {
-	inicializar(&tab->indices);	
-	tab->arquivo_dados = fopen("dados.dat", "a+b");
-	tab->indices = carregar_arquivo("indices.dat", tab->indices);
-	if(tab->arquivo_dados != NULL)
-		return 1;
-	else
-		return 0;
+void salvar_arquivoRb(char *nome, arvorerb a) {
+	FILE *arq;
+	arq = fopen(nome, "wb");
+	if(arq != NULL) {
+		salvar_auxiliarRb(a, arq);
+		fclose(arq);
+	}
 }
 
-void finalizar (tabela *tab) {
-	fclose(tab->arquivo_dados);
-	salvar_arquivo("indices.dat", tab->indices);
-}
-
-void adicionar (int valor, arvore *raiz) {
-	arvore posicao, pai, novo;
-    //utiliza-se *raiz, por ser um ponteiro de ponteiro
-	posicao = *raiz;
-	pai = NULL;
-
-	/*navega na árvore até encontrar a posição vaga apropriada para o elemento,
-		nesta "descida" é necessário manter o ponteiro para o pai, pois após encontrar 
-		a posição vaga (NULL) não seria possível navegar para o pai com o ponteiro posicao->pai */
-	 while(posicao != NULL) {
-			pai = posicao;
-			if(valor > posicao->dado) 
-					posicao = posicao->dir;
-			else 
-					posicao = posicao->esq;
+void salvar_auxiliarRb(arvorerb raiz, FILE *arq){
+	if(raiz != NULL) {
+		fwrite(raiz->dado, sizeof(tipo_dadorb), 1, arq);
+		salvar_auxiliarRb(raiz->esq, arq);
+		salvar_auxiliarRb(raiz->dir, arq);
 	}
 
+}
 
-    //Após achar a posição, inicializa o novo elemento
-	novo = (arvore) malloc(sizeof(struct no_bst));
-	novo->dado = valor;
-	novo->esq = NULL;
-	novo->dir = NULL;
-	novo->pai = pai;
-	novo->cor = VERMELHO;
+arvorerb carregar_arquivoRb(char *nome, arvorerb a) {
+	FILE *arq;
+	arq = fopen(nome, "rb");
+	tipo_dadorb * temp;
+	if(arq != NULL) {
+		temp = (tipo_dadorb *) malloc(sizeof(tipo_dadorb));
+		while(fread(temp, sizeof(tipo_dadorb), 1, arq)) {
+			
+			adicionarRb(temp, &a);			
+			temp = (tipo_dadorb *) malloc(sizeof(tipo_dadorb));
 
-    //Atualiza a raiz da árvore, caso esteja inserindo o primeiro elemento
-    //Observe novamente o uso do ponteiro de ponteiro
-	if(eh_raiz(novo))	
-			*raiz = novo;
-	else {
-        //Se não for a raiz, é preciso realizar a ligação do pai(direita ou esquerda) com o novo elemento
-		if(valor > pai->dado)
-			pai->dir = novo;
-		else
-			pai->esq = novo;
+		}
+		fclose(arq);
+
 	}
+	return a;
+}
 
-    //Após inserir, verifica e ajusta a árvore resultante
-	ajustar(raiz, novo);
+void adicionarRb( tipo_dadorb *valor, arvorerb *raiz) {
+    arvorerb posicao = *raiz;
+    arvorerb pai = NULL;
+
+    while(posicao != NULL) {
+        pai = posicao;
+        if(strcmp(valor->chave, posicao->dado->chave) > 0)
+            posicao = posicao->dir;
+        else
+            posicao = posicao->esq;
+    }
+
+    arvorerb novo = (arvorerb) malloc(sizeof(struct no_rb));
+    novo->dado = valor;
+    novo->esq = NULL;
+    novo->dir = NULL;
+    novo->pai = pai;
+    novo->cor = VERMELHO;
+
+    if(eh_raiz(novo))
+        *raiz = novo;
+    else {
+        if(strcmp(valor->chave, pai->dado->chave) > 0)
+            pai->dir = novo;
+        else
+            pai->esq = novo;
+    }
+
+    ajustar(raiz, novo);
 }
 
 
-/* Verifica se a árvore está obedecendo todas as regras da RB e aplica as correções necessárias após a inserção.
-Parâmetros:
-    raiz - raiz (absoluta) da árvore
-    elemento - nó recentemente inserido que pode ter causado o desajuste da árvore
-*/
-void ajustar(arvore *raiz, arvore elemento){
-    //A árvore está desajustada se tanto o elemento quanto o seu pai estiverem com a cor vermelha
-    //Utilizamos um while para continuar a verificação até chegar a raiz, quando necessário
+void ajustar(arvorerb *raiz, arvorerb elemento){
+
 	while(cor(elemento->pai) == VERMELHO && cor(elemento) == VERMELHO) {
-			//caso 1: Cor do tio é vermelha, desce o preto do avô
+
 			if(cor(tio(elemento)) == VERMELHO) {
 				tio(elemento)->cor = PRETO;
 				elemento->pai->cor = PRETO;
 				elemento->pai->pai->cor = VERMELHO;
-				//Continua a verificação a partir do avô, que mudou para vermelho e pode ter 
-				//gerado uma sequência vermelho-vermelho				
+		
 				elemento = elemento->pai->pai;
 				continue;
 			} 
@@ -121,8 +124,8 @@ void ajustar(arvore *raiz, arvore elemento){
 	(*raiz)->cor = PRETO;
 }
 
-void rotacao_simples_direita(arvore *raiz, arvore pivo){
-			arvore u, t1;
+void rotacao_simples_direita(arvorerb *raiz, arvorerb pivo){
+			arvorerb u, t1;
 			u = pivo->esq;
             t1 = u->dir;
 			int posicao_pivo_esq = eh_filho_esquerdo(pivo);
@@ -146,8 +149,8 @@ void rotacao_simples_direita(arvore *raiz, arvore pivo){
 			}
 }
 
-void rotacao_simples_esquerda(arvore *raiz, arvore pivo) {
-				arvore u, t1;
+void rotacao_simples_esquerda(arvorerb *raiz, arvorerb pivo) {
+				arvorerb u, t1;
 			u = pivo->dir;
             t1 = u->esq;
 
@@ -172,18 +175,17 @@ void rotacao_simples_esquerda(arvore *raiz, arvore pivo) {
 			}
 }
 
-void rotacao_dupla_direita(arvore *raiz, arvore pivo) {
+void rotacao_dupla_direita(arvorerb *raiz, arvorerb pivo) {
     rotacao_simples_esquerda (raiz, pivo->esq);
     rotacao_simples_direita(raiz, pivo);
 }
 
-void rotacao_dupla_esquerda(arvore *raiz, arvore pivo) {
+void rotacao_dupla_esquerda(arvorerb *raiz, arvorerb pivo) {
     rotacao_simples_direita(raiz, pivo->dir);
     rotacao_simples_esquerda(raiz, pivo);
 }
 
-/*Retorna a cor de um nó. Observe que, por definição, o null é preto*/
-enum cor cor(arvore elemento) {
+enum cor cor(arvorerb elemento) {
 	enum cor c;
 	if(elemento==NULL)
 		return PRETO;
@@ -191,24 +193,24 @@ enum cor cor(arvore elemento) {
 		return elemento->cor;
 	return c;
 }
-/*Verifica se um nó é a raiz da árvore*/
-int eh_raiz(arvore elemento) {
+
+int eh_raiz(arvorerb elemento) {
 	return (elemento->pai == NULL);
 }
-/*Verifica se um nó é filho esquerdo*/
-int eh_filho_esquerdo(arvore elemento) {
+
+int eh_filho_esquerdo(arvorerb elemento) {
 	return (elemento->pai != NULL && elemento == elemento->pai->esq);
 }
 
-int eh_filho_direito(arvore elemento){
+int eh_filho_direito(arvorerb elemento){
 	return (elemento->pai != NULL && elemento == elemento->pai->dir);
 }
 
-arvore tio(arvore elemento) {
+arvorerb tio(arvorerb elemento) {
 	return irmao(elemento->pai);
 }
 
-arvore irmao(arvore elemento) {
+arvorerb irmao(arvorerb elemento) {
 	if(eh_filho_esquerdo(elemento))
 		return elemento->pai->dir;
 	else
@@ -216,74 +218,50 @@ arvore irmao(arvore elemento) {
 }
 
 
-void imprimir(arvore raiz) {
+void imprimirRb(arvorerb raiz) {
 	printf("(");
 	if(raiz != NULL) {
-		imprimir_elemento(raiz);
-		imprimir(raiz->esq);
-		imprimir(raiz->dir);
+		imprimir_elementoRb(raiz);
+		imprimirRb(raiz->esq);
+		imprimirRb(raiz->dir);
 	}
 	printf(")");
 }
 
-
-int altura(arvore raiz) {
-	if(raiz == NULL) {
-		return 0;
-	}
-	return 1 + maior(altura(raiz->dir), altura(raiz->esq));
-}
-
-int maior(int a, int b) {
-	if(a > b)
-		return a;
-	else
-		return b;
-}
-
-int maior_elemento(arvore raiz) {
+tipo_dadorb * maior_elementoRb(arvorerb raiz) {
 	if(raiz == NULL)
-			return -1;
+			return NULL;
 	if(raiz->dir == NULL)
 			return raiz->dado;
 	else
-			return maior_elemento(raiz->dir);
+			return maior_elementoRb(raiz->dir);
 }
 
-int menor_elemento(arvore raiz) {
-	if(raiz == NULL)
-			return -1;
-	if(raiz->esq == NULL)
-			return raiz->dado;
-	else
-			return maior_elemento(raiz->esq);
-}
-
-void pre_order(arvore raiz) {
+void pre_orderRb(arvorerb raiz, tabela *tab) {
 	if(raiz != NULL) {
-		imprimir_elemento(raiz);
-		pre_order(raiz->esq);
-		pre_order(raiz->dir);
+		imprimir_elementoRbtabela(raiz, tab);
+		pre_orderRb(raiz->esq, tab);
+		pre_orderRb(raiz->dir, tab);
 	}
 }
 
-void pos_order(arvore raiz) {
+void pos_orderRb(arvorerb raiz, tabela *tab) {
 	if(raiz != NULL) {
-		pos_order(raiz->esq);
-		pos_order(raiz->dir);
-		imprimir_elemento(raiz);
+		pos_orderRb(raiz->esq, tab);
+		pos_orderRb(raiz->dir, tab);
+		imprimir_elementoRbtabela(raiz, tab);
 	}
 }
 
-void in_order(arvore raiz) {
+void in_orderRb(arvorerb raiz, tabela *tab) {
 	if(raiz != NULL) {
-		in_order(raiz->esq);
-		imprimir_elemento(raiz);
-		in_order(raiz->dir);
+		in_orderRb(raiz->esq, tab);
+		imprimir_elementoRbtabela(raiz, tab);
+		in_orderRb(raiz->dir, tab);
 	}
 }
 
-void imprimir_elemento(arvore raiz) {
+void imprimir_elementoRb(arvorerb raiz) {
 	switch(raiz->cor){
 		case PRETO:
 			printf("\x1b[30m[%d]\x1b[0m", raiz->dado);
@@ -297,21 +275,19 @@ void imprimir_elemento(arvore raiz) {
 	}
 }
 
-void remover (int valor, arvore *raiz) {
-	arvore posicao;
+arvorerb removerRb (char *valor, arvorerb *raiz) {
+	arvorerb posicao;
 	posicao = *raiz;
 
 	while(posicao != NULL) {
-		if(valor == posicao->dado) {
-			//elemento possui dois filhos
+		if(strcmp(valor, posicao->dado->chave) == 0) {
+
             if(posicao->esq != NULL && posicao->dir != NULL) { 
-    			posicao->dado = maior_elemento(posicao->esq);   
-	    		valor = posicao->dado;
+    			posicao->dado = maior_elementoRb(posicao->esq);   
+	    		strcpy(valor, posicao->dado->chave);
             }
 
-			//O elemento possui apenas um filho (direito)
 			if(posicao->esq == NULL && posicao->dir != NULL) {
-                //O seu filho direito sobe para a posição do elemento  a ser removido e recebe a cor preta
 				posicao->dir->cor = PRETO;
                 posicao->dir->pai = posicao->pai;
 
@@ -329,7 +305,6 @@ void remover (int valor, arvore *raiz) {
 			}
 
 
-			//O elemento possui apenas um filho (esquerdo)
 			if(posicao->dir == NULL && posicao->esq != NULL) {
 				posicao->esq->cor = PRETO;
 				posicao->esq->pai = posicao->pai;
@@ -348,18 +323,14 @@ void remover (int valor, arvore *raiz) {
 				break;	
 			}
 
-			//O elemento não possui filhos
 			if(posicao->esq == NULL && posicao->dir == NULL) {
-				//Remover raiz sem filhos					
+				
 				if(eh_raiz(posicao)) {
 					*raiz = NULL;
                     free(posicao);
 					break;
 				}
 
-				//Remover elemento que não possui filhos e não é raiz
-				//Se for vermelho, apenas remove atualizando o ponteiro 
-				//correspondente do pai
 				if(posicao->cor == VERMELHO) {
 					if(eh_filho_esquerdo(posicao))
 						posicao->pai->esq = NULL;
@@ -368,7 +339,7 @@ void remover (int valor, arvore *raiz) {
                     free(posicao);
 					break;
 				} else {
-				//Se o elemento for preto, substitui pelo duplo preto e depois ajusta a árvore
+
                 no_null->cor = DUPLO_PRETO;
 				no_null->pai = posicao->pai;
 				if(eh_filho_esquerdo(posicao))
@@ -381,20 +352,17 @@ void remover (int valor, arvore *raiz) {
 				}
 			}
 		}	
-		if(valor > posicao->dado) 
+		if(strcmp(valor, posicao->dado->chave) > 0) 
 				posicao = posicao->dir;
 		else 
 				posicao = posicao->esq;
 	}
 }
 
-/*Realiza a correção da árvore após a remoção de um elemento preto que não possui filhos, ou seja, elimina o nó null o duplo-preto.*/
 
-void reajustar(arvore *raiz, arvore elemento){
+void reajustar(arvorerb *raiz, arvorerb elemento){
 
-	//caso 1	
 	if(eh_raiz(elemento)) {
-//		printf("caso 1\n");
 		elemento->cor = PRETO;
         if(elemento == no_null) {
             *raiz = NULL;
@@ -402,12 +370,10 @@ void reajustar(arvore *raiz, arvore elemento){
 		return;
 	}
 
-	//caso 2
 	if(  cor(elemento->pai) == PRETO &&
 		 cor(irmao(elemento)) == VERMELHO &&
 		 cor(irmao(elemento)->dir) == PRETO &&
 		 cor(irmao(elemento)->esq) == PRETO ) {
-                //Verifica se é o caso 2 esquerdo ou direito
 				if(eh_filho_esquerdo(elemento))
 						rotacao_simples_esquerda(raiz, elemento->pai);
 				else
@@ -416,13 +382,10 @@ void reajustar(arvore *raiz, arvore elemento){
                 elemento->pai->pai->cor = PRETO;
 				elemento->pai->cor = VERMELHO;
 				
-                //Atenção à chamada recursiva do reajustar.
-                //O caso 2 não remove o duplo-preto
                 reajustar(raiz, elemento);
 				return;
 	}
 
-	//caso 3
 	if(cor(elemento->pai) == PRETO &&
 		 cor(irmao(elemento)) == PRETO &&
 		 cor(irmao(elemento)->dir) == PRETO &&
@@ -437,7 +400,6 @@ void reajustar(arvore *raiz, arvore elemento){
 			return ;
 	}	
 
-	//caso 4
 	if(cor(elemento->pai) == VERMELHO &&
 		 cor(irmao(elemento)) == PRETO &&
 		 cor(irmao(elemento)->dir) == PRETO &&
@@ -451,8 +413,6 @@ void reajustar(arvore *raiz, arvore elemento){
 			return;
 	}
 
-    //Casos 5 e 6 ficam mais fáceis separando o esquerdo do direito
-	//caso 5a
 	if(	 eh_filho_esquerdo(elemento) &&
 		 cor(irmao(elemento)) == PRETO &&
 		 cor(irmao(elemento)->dir) == PRETO &&
@@ -512,7 +472,7 @@ void reajustar(arvore *raiz, arvore elemento){
 	}
 }
 
-void retira_duplo_preto(arvore *raiz, arvore elemento) {
+void retira_duplo_preto(arvorerb *raiz, arvorerb elemento) {
 			if(elemento == no_null)
 				if(eh_filho_esquerdo(elemento))
 						elemento->pai->esq = NULL;
@@ -522,38 +482,15 @@ void retira_duplo_preto(arvore *raiz, arvore elemento) {
 				elemento->cor = PRETO;
 }
 
-void salvar_arquivo(char *nome, arvore a) {
-	FILE *arq;
-	arq = fopen(nome, "wb");
-	if(arq != NULL) {
-		salvar_auxiliar(a, arq);
-		fclose(arq);
-	}
-}
+void imprimir_elementoRbtabela(arvorerb raiz, tabela * tab) {
+	dado * temp = (dado *) malloc (sizeof(dado));
+    temp->numero = 1000;
+    printf("indice: %d\n", raiz->dado->indice);
 
-void salvar_auxiliar(arvore raiz, FILE *arq){
-	if(raiz != NULL) {
-		fwrite(raiz->dado, sizeof(tipo_dado), 1, arq);
-		salvar_auxiliar(raiz->esq, arq);
-		salvar_auxiliar(raiz->dir, arq);
-	}
+   	fseek(tab->arquivo_dados, raiz->dado->indice, SEEK_SET);
+	//
+	int r = fread(temp, sizeof(dado), 1, tab->arquivo_dados);
 
-}
-
-arvore carregar_arquivo(char *nome, arvore a) {
-	FILE *arq;
-	arq = fopen(nome, "rb");
-	tipo_dado * temp;
-	if(arq != NULL) {
-		temp = (tipo_dado *) malloc(sizeof(tipo_dado));
-		while(fread(temp, sizeof(tipo_dado), 1, arq)) {
-			
-			a = adicionar(temp, a);			
-			temp = (tipo_dado *) malloc(sizeof(tipo_dado));
-
-		}
-		fclose(arq);
-
-	}
-	return a;
+	printf("[%s, %d, %d, %s, %s, %d ]\n",temp->nome,r, temp->numero, temp->posicao, temp->nacionalidade, temp->idade);
+	free(temp);
 }
